@@ -96,6 +96,7 @@ func writeLogToFile(servers []server) error {
 }
 
 func loadLog(srv server, ch chan string) error {
+	log.Print("loadLog started")
 	client, err := getSSHClient(srv)
 	if err != nil {
 		return err
