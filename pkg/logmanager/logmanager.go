@@ -69,8 +69,9 @@ func parseConfig(configPath string) (*config, error) {
 
 func writeLogToFile(servers []server) error {
 
-	ch := make(chan string, 22)
+	ch := make(chan string, len(servers))
 
+	log.Print(servers)
 	for _, srv := range servers {
 		go loadLog(srv, ch)
 	}
