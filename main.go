@@ -37,7 +37,7 @@ func main() {
 			}
 		}
 	}
-	err := logmanager.Run("home/klassen/Bot/config.json", servers)
+	err := logmanager.Run("/home/klassen/Bot/config.json", servers)
 	if err != nil {
 		log.Fatal(err)
 	}
