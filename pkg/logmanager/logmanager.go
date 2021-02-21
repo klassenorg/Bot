@@ -140,7 +140,7 @@ func cutLog(rawLog string) string {
 	var counter int
 	for lineNum := range lines {
 		currentLine := lines[len(lines)-1-lineNum]
-		if counter == 250 {
+		if counter == 2000 {
 			if len(currentLine) < 50 {
 				continue
 			}
