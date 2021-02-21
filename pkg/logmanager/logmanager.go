@@ -47,7 +47,6 @@ func Run(configPath string, servers []int) error {
 	if err != nil {
 		return err
 	}
-	log.Print("log writted to file")
 
 	return nil
 }
@@ -130,7 +129,7 @@ func cutLog(rawLog string) string {
 	const timeLayout = "[02/Jan/2006:15:04:05"
 
 	lines := strings.Split(rawLog, "\n")
-	log.Print("raw log splitted")
+	log.Print("raw log splitted, count of lines: ", len(lines))
 
 	var goodLines string
 
@@ -146,7 +145,7 @@ func cutLog(rawLog string) string {
 		if timeStamp.Before(tenMinutesAgo) {
 			break
 		}
-		goodLines = line + goodLines + "\n"
+		goodLines = line + "\n" + goodLines
 	}
 	log.Printf("len of goodLines: %d", len(goodLines))
 
