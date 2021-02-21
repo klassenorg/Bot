@@ -124,7 +124,7 @@ func loadLog(srv server, ch chan string, wg *sync.WaitGroup) error {
 }
 
 func cutLog(rawLog string) string {
-	tenMinutesAgo := time.Now().Add(time.Minute * -10)
+	tenMinutesAgo := time.Now().Add(time.Minute * -10).Add(time.Hour * 3) // 3 hrs because don't want parse TZ
 
 	const timeLayout = "[02/Jan/2006:15:04:05"
 
@@ -145,7 +145,7 @@ func cutLog(rawLog string) string {
 		if timeStamp.Before(tenMinutesAgo) {
 			break
 		}
-		goodLines = line + "\n" + goodLines
+		goodLines = goodLines + "\n" + line
 	}
 	log.Printf("len of goodLines: %d", len(goodLines))
 
