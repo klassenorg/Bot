@@ -137,15 +137,16 @@ func cutLog(rawLog string) string {
 	log.Print("Last line: ", lines[len(lines)-1])
 	log.Print("First line: ", lines[0])
 	for lineNum, line := range lines {
-		log.Print("processing line..", len(lines)-1-lineNum)
 		currentLine := lines[len(lines)-1-lineNum]
 		if len(currentLine) < 50 {
 			continue
 		}
 		timeStamp, err := time.Parse(timeLayout, strings.Split(currentLine, " ")[2])
 		if err != nil {
+			log.Print(err)
 			continue
 		}
+		log.Print("processing line..", len(lines)-1-lineNum, timeStamp)
 		if timeStamp.Before(tenMinutesAgo) {
 			break
 		}
