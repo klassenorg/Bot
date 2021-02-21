@@ -3,9 +3,9 @@ package logmanager
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -108,76 +108,36 @@ func loadLog(srv server, ch chan string, wg *sync.WaitGroup) error {
 	}
 	log.Printf("ssh client for %s created", srv.Name)
 
-	rawLog, err := sshDo(client,
-		"tail -c 100000000 /app/nginx/logs/atg-access.log")
+	const timeLayout = "[02/Jan/2006:15:04:05"
+	tenMinutesAgo := time.Now().Add(time.Minute * -10)
+
+	cuttedLog, err := sshDo(client,
+		fmt.Sprintf(`tail -c 100000000 /app/nginx/logs/atg-access.log | sed -n "/%s/,$ p"`, tenMinutesAgo.Format(timeLayout)))
 	if err != nil {
 		return err
 	}
 	log.Printf("raw log from %s taken", srv.Name)
 
-	goodLog := cutLog(rawLog)
-
-	ch <- goodLog
+	ch <- string(cuttedLog)
 	log.Printf("good log from %s sent to chan", srv.Name)
 
 	return nil
 }
 
-func cutLog(rawLog string) string {
-	tenMinutesAgo := time.Now().Add(time.Minute * -10).Add(time.Hour * 3) // 3 hrs because don't want parse TZ
-
-	const timeLayout = "[02/Jan/2006:15:04:05"
-
-	lines := strings.Split(rawLog, "\n")
-	lines = lines[1 : len(lines)-10]
-	log.Print("raw log splitted, count of lines: ", len(lines))
-
-	var goodLines string
-
-	log.Print("Last line: ", lines[len(lines)-1])
-	log.Print("First line: ", lines[0])
-
-	var counter int
-	for lineNum := range lines {
-		currentLine := lines[len(lines)-1-lineNum]
-		if counter == 2000 {
-			if len(currentLine) < 50 {
-				continue
-			}
-			timeStamp, err := time.Parse(timeLayout, strings.Split(currentLine, " ")[2])
-			if err != nil {
-				log.Print(err)
-				continue
-			}
-			log.Print("processing line..", len(lines)-1-lineNum, timeStamp)
-			if timeStamp.Before(tenMinutesAgo) {
-				log.Print("alarm, timestamp is wrong")
-				break
-			}
-			counter = 0
-		}
-		goodLines = goodLines + "\n" + currentLine
-		counter++
-	}
-	log.Printf("len of goodLines: %d", len(goodLines))
-
-	return goodLines
-}
-
-func sshDo(sshClient *ssh.Client, cmd string) (string, error) {
+func sshDo(sshClient *ssh.Client, cmd string) ([]byte, error) {
 	session, err := sshClient.NewSession()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	log.Printf("session for cmd '%s' created", cmd)
 
 	output, err := session.CombinedOutput(cmd)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	log.Printf("len of session output: %d", len(output))
 
-	return string(output), nil
+	return output, nil
 }
 
 func getSSHClient(srv server) (*ssh.Client, error) {
