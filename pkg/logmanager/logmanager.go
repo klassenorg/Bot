@@ -129,7 +129,7 @@ func cutLog(rawLog string) string {
 	const timeLayout = "[02/Jan/2006:15:04:05"
 
 	lines := strings.Split(rawLog, "\n")
-	lines = lines[:len(lines)-10]
+	lines = lines[1 : len(lines)-10]
 	log.Print("raw log splitted, count of lines: ", len(lines))
 
 	var goodLines string
@@ -137,6 +137,7 @@ func cutLog(rawLog string) string {
 	log.Print("Last line: ", lines[len(lines)-1])
 	log.Print("First line: ", lines[0])
 	for lineNum, line := range lines {
+		log.Print("processing line..", len(lines)-1-lineNum)
 		currentLine := lines[len(lines)-1-lineNum]
 		if len(currentLine) < 50 {
 			continue
