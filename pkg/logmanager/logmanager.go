@@ -3,6 +3,7 @@ package logmanager
 import (
 	"bufio"
 	"encoding/json"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -33,16 +34,19 @@ func Run(configPath string, servers []int) error {
 	if err != nil {
 		return err
 	}
+	log.Print("config parsed: ", cfg)
 
 	srvList := make([]server, len(servers))
 	for i, srv := range servers {
 		srvList[i] = cfg.Servers[srv]
 	}
+	log.Print("servers list parsed: ", srvList)
 
 	err = writeLogToFile(srvList)
 	if err != nil {
 		return err
 	}
+	log.Print("log writted to file")
 
 	return nil
 }
@@ -52,6 +56,7 @@ func parseConfig(configPath string) (*config, error) {
 	if err != nil {
 		return &config{}, err
 	}
+	log.Printf("file %s opened", configPath)
 	decoder := json.NewDecoder(file)
 	cfg := new(config)
 	err = decoder.Decode(&cfg)
@@ -74,6 +79,7 @@ func writeLogToFile(servers []server) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("file created")
 
 	w := bufio.NewWriter(f)
 	for log := range ch {
@@ -83,6 +89,7 @@ func writeLogToFile(servers []server) error {
 		}
 	}
 	w.Flush()
+	log.Print("log writed in file")
 
 	return nil
 }
@@ -92,16 +99,19 @@ func loadLog(srv server, ch chan string) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("ssh client for %s created", srv.Name)
 
 	rawLog, err := sshDo(client,
 		"tail -c 100000000 /app/nginx/logs/atg-access.log")
 	if err != nil {
 		return err
 	}
+	log.Printf("raw log from %s taken", srv.Name)
 
 	goodLog := cutLog(rawLog)
 
 	ch <- goodLog
+	log.Printf("good log from %s sent to chan", srv.Name)
 
 	return nil
 }
@@ -112,6 +122,7 @@ func cutLog(rawLog string) string {
 	const timeLayout = "[02/Jan/2006:15:04:05"
 
 	lines := strings.Split(rawLog, "\n")
+	log.Print("raw log splitted")
 
 	var goodLines string
 
@@ -129,6 +140,7 @@ func cutLog(rawLog string) string {
 		}
 		goodLines = line + goodLines
 	}
+	log.Printf("len of goodLines: %d", len(goodLines))
 
 	return goodLines
 }
@@ -138,11 +150,13 @@ func sshDo(sshClient *ssh.Client, cmd string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	log.Printf("session for cmd '%s' created", cmd)
 
 	output, err := session.CombinedOutput(cmd)
 	if err != nil {
 		return "", err
 	}
+	log.Printf("len of session output: %d", len(output))
 
 	return string(output), nil
 }
@@ -160,6 +174,7 @@ func getSSHClient(srv server) (*ssh.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("connected to server addr: %s", addr)
 
 	return sshClient, nil
 }
