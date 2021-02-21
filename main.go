@@ -26,18 +26,18 @@ func main() {
 			left, _ := strconv.Atoi(server[0])
 			right, _ := strconv.Atoi(server[1])
 			for i := left; i <= right; i++ {
-				if !contains(servers, i) {
+				if !contains(servers, i) && i < 23 && i > 0 {
 					servers = append(servers, i-1)
 				}
 			}
 		} else {
 			i, _ := strconv.Atoi(part)
-			if !contains(servers, i) {
+			if !contains(servers, i) && i < 23 && i > 0 {
 				servers = append(servers, i-1)
 			}
 		}
 	}
-	err := logmanager.Run("./config.json", servers)
+	err := logmanager.Run("home/klassen/Bot/config.json", servers)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -80,7 +80,7 @@ func writeLogToFile(servers []server) error {
 	wg.Wait()
 	close(ch)
 
-	f, err := os.Create("/app/jet/scripts/klassen/psacceslogGo.txt")
+	f, err := os.Create("/app/jet/scripts/klassen/psaccesslog.txt")
 	if err != nil {
 		return err
 	}
