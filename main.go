@@ -11,11 +11,23 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 2 {
+	if len(os.Args) != 3 {
 		log.Fatal(errors.New("Wrong arguments"))
 	}
 	args := os.Args[1]
+	env := os.Args[2]
 
+	var maxServers int
+	var configPath string
+
+	switch env {
+	case "prod":
+		configPath = "/home/klassen/Bot/config.json"
+		maxServers = 23
+	case "pilot":
+		configPath = "/home/klassen/Bot/configPilot.json"
+		maxServers = 21
+	}
 	parts := strings.Split(args, ",")
 
 	servers := make([]int, 0)
@@ -26,18 +38,19 @@ func main() {
 			left, _ := strconv.Atoi(server[0])
 			right, _ := strconv.Atoi(server[1])
 			for i := left; i <= right; i++ {
-				if !contains(servers, i) && i < 23 && i > 0 {
+				if !contains(servers, i) && i < maxServers && i > 0 {
 					servers = append(servers, i-1)
 				}
 			}
 		} else {
 			i, _ := strconv.Atoi(part)
-			if !contains(servers, i) && i < 23 && i > 0 {
+			if !contains(servers, i) && i < maxServers && i > 0 {
 				servers = append(servers, i-1)
 			}
 		}
 	}
-	err := logmanager.Run("/home/klassen/Bot/config.json", servers)
+
+	err := logmanager.Run(configPath, servers)
 	if err != nil {
 		log.Fatal(err)
 	}
