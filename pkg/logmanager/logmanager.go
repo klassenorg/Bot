@@ -76,7 +76,7 @@ func writeLogToFile(servers []server) error {
 	log.Print(servers)
 	for _, srv := range servers {
 		wg.Add(1)
-		go loadLog(srv, ch, wg)
+		go loadLog(srv, ch, &wg)
 	}
 	wg.Wait()
 	close(ch)
