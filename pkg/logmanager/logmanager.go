@@ -169,6 +169,7 @@ func getSSHClient(srv server) (*ssh.Client, error) {
 		Auth: []ssh.AuthMethod{
 			ssh.Password(srv.Host.Password),
 		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
 	addr := srv.Host.Addr + ":" + srv.Host.Port
