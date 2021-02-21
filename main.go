@@ -27,13 +27,13 @@ func main() {
 			right, _ := strconv.Atoi(server[1])
 			for i := left; i <= right; i++ {
 				if !contains(servers, i) {
-					servers = append(servers, i)
+					servers = append(servers, i-1)
 				}
 			}
 		} else {
 			i, _ := strconv.Atoi(part)
 			if !contains(servers, i) {
-				servers = append(servers, i)
+				servers = append(servers, i-1)
 			}
 		}
 	}

@@ -133,6 +133,8 @@ func cutLog(rawLog string) string {
 
 	var goodLines string
 
+	log.Print("Last line: ", lines[len(lines)-1])
+	log.Print("First line: ", lines[0])
 	for lineNum, line := range lines {
 		currentLine := lines[len(lines)-1-lineNum]
 		if len(currentLine) < 50 {
