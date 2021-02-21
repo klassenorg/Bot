@@ -136,22 +136,28 @@ func cutLog(rawLog string) string {
 
 	log.Print("Last line: ", lines[len(lines)-1])
 	log.Print("First line: ", lines[0])
+
+	var counter int
 	for lineNum := range lines {
 		currentLine := lines[len(lines)-1-lineNum]
-		if len(currentLine) < 50 {
-			continue
-		}
-		timeStamp, err := time.Parse(timeLayout, strings.Split(currentLine, " ")[2])
-		if err != nil {
-			log.Print(err)
-			continue
-		}
-		log.Print("processing line..", len(lines)-1-lineNum, timeStamp)
-		if timeStamp.Before(tenMinutesAgo) {
-			log.Print("alarm, timestamp is wrong")
-			break
+		if counter == 250 {
+			if len(currentLine) < 50 {
+				continue
+			}
+			timeStamp, err := time.Parse(timeLayout, strings.Split(currentLine, " ")[2])
+			if err != nil {
+				log.Print(err)
+				continue
+			}
+			log.Print("processing line..", len(lines)-1-lineNum, timeStamp)
+			if timeStamp.Before(tenMinutesAgo) {
+				log.Print("alarm, timestamp is wrong")
+				break
+			}
+			counter = 0
 		}
 		goodLines = goodLines + "\n" + currentLine
+		counter++
 	}
 	log.Printf("len of goodLines: %d", len(goodLines))
 
