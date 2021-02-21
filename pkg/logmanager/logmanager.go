@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -69,12 +70,16 @@ func parseConfig(configPath string) (*config, error) {
 
 func writeLogToFile(servers []server) error {
 
+	var wg sync.WaitGroup
 	ch := make(chan string, len(servers))
 
 	log.Print(servers)
 	for _, srv := range servers {
-		go loadLog(srv, ch)
+		wg.Add(1)
+		go loadLog(srv, ch, wg)
 	}
+	wg.Wait()
+	close(ch)
 
 	f, err := os.Create("/app/jet/scripts/klassen/psacceslogGo.txt")
 	if err != nil {
@@ -95,7 +100,8 @@ func writeLogToFile(servers []server) error {
 	return nil
 }
 
-func loadLog(srv server, ch chan string) error {
+func loadLog(srv server, ch chan string, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	log.Print("loadLog started")
 	client, err := getSSHClient(srv)
 	if err != nil {
@@ -140,7 +146,7 @@ func cutLog(rawLog string) string {
 		if timeStamp.Before(tenMinutesAgo) {
 			break
 		}
-		goodLines = line + goodLines
+		goodLines = line + goodLines + "\n"
 	}
 	log.Printf("len of goodLines: %d", len(goodLines))
 
