@@ -129,6 +129,7 @@ func cutLog(rawLog string) string {
 	const timeLayout = "[02/Jan/2006:15:04:05"
 
 	lines := strings.Split(rawLog, "\n")
+	lines = lines[:len(lines)-10]
 	log.Print("raw log splitted, count of lines: ", len(lines))
 
 	var goodLines string
