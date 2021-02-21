@@ -148,9 +148,10 @@ func cutLog(rawLog string) string {
 		}
 		log.Print("processing line..", len(lines)-1-lineNum, timeStamp)
 		if timeStamp.Before(tenMinutesAgo) {
+			log.Print("alarm, timestamp is wrong")
 			break
 		}
-		goodLines = goodLines + "\n" + line
+		goodLines = goodLines + "\n" + currentLine
 	}
 	log.Printf("len of goodLines: %d", len(goodLines))
 
