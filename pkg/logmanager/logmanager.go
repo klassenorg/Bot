@@ -108,7 +108,7 @@ func loadLog(srv server, ch chan string, wg *sync.WaitGroup) error {
 	}
 	log.Printf("ssh client for %s created", srv.Name)
 
-	const timeLayout = "[02/Jan/2006:15:04:05"
+	const timeLayout = "02\\/Jan\\/2006:15:04:05"
 	tenMinutesAgo := time.Now().Add(time.Minute * -10)
 
 	cuttedLog, err := sshDo(client,
