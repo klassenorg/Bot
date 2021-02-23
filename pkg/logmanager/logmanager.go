@@ -35,13 +35,15 @@ func Run(configPath string, servers []int) error {
 	if err != nil {
 		return err
 	}
-	log.Print("config parsed: ", cfg)
+	log.Printf("Config parsed successfully, found %d servers", len(cfg.Servers))
+	for _, srvForLog := range cfg.Servers {
+		log.Printf("%s %s", srvForLog.Name, srvForLog.Host.Addr)
+	}
 
 	srvList := make([]server, len(servers))
 	for i, srv := range servers {
 		srvList[i] = cfg.Servers[srv]
 	}
-	log.Print("servers list parsed: ", srvList)
 
 	err = writeLogToFile(srvList)
 	if err != nil {
@@ -56,7 +58,7 @@ func parseConfig(configPath string) (*config, error) {
 	if err != nil {
 		return &config{}, err
 	}
-	log.Printf("file %s opened", configPath)
+
 	decoder := json.NewDecoder(file)
 	cfg := new(config)
 	err = decoder.Decode(&cfg)
@@ -84,7 +86,6 @@ func writeLogToFile(servers []server) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("file created")
 
 	w := bufio.NewWriter(f)
 	for log := range ch {
@@ -94,32 +95,31 @@ func writeLogToFile(servers []server) error {
 		}
 	}
 	w.Flush()
-	log.Print("log writed in file")
+	log.Println("file saved")
 
 	return nil
 }
 
 func loadLog(srv server, ch chan string, wg *sync.WaitGroup) error {
 	defer wg.Done()
-	log.Print("loadLog started")
 	client, err := getSSHClient(srv)
 	if err != nil {
 		return err
 	}
-	log.Printf("ssh client for %s created", srv.Name)
+	defer client.Close()
 
 	const timeLayout = "02\\/Jan\\/2006:15:04:05"
 	tenMinutesAgo := time.Now().Add(time.Minute * -10)
+	cmd := fmt.Sprintf(`tail -c 100000000 /app/nginx/logs/atg-access.log | sed -n "/%s/,$ p"`, tenMinutesAgo.Format(timeLayout))
 
-	cuttedLog, err := sshDo(client,
-		fmt.Sprintf(`tail -c 100000000 /app/nginx/logs/atg-access.log | sed -n "/%s/,$ p"`, tenMinutesAgo.Format(timeLayout)))
+	log.Printf("command %s sent to %s", cmd, srv.Name)
+	cuttedLog, err := sshDo(client, cmd)
 	if err != nil {
 		return err
 	}
-	log.Printf("raw log from %s taken", srv.Name)
 
-	ch <- string(cuttedLog)
-	log.Printf("good log from %s sent to chan", srv.Name)
+	ch <- srv.Name + "\n" + string(cuttedLog)
+	log.Printf("output sent from %s to channel", srv.Name)
 
 	return nil
 }
@@ -129,13 +129,12 @@ func sshDo(sshClient *ssh.Client, cmd string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("session for cmd '%s' created", cmd)
+	defer session.Close()
 
 	output, err := session.CombinedOutput(cmd)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("len of session output: %d", len(output))
 
 	return output, nil
 }
@@ -154,7 +153,6 @@ func getSSHClient(srv server) (*ssh.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("connected to server addr: %s", addr)
 
 	return sshClient, nil
 }
