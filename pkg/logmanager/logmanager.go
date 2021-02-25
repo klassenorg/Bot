@@ -108,9 +108,9 @@ func loadLog(srv server, ch chan string, wg *sync.WaitGroup) error {
 	}
 	defer client.Close()
 
-	const timeLayout = "02\\/Jan\\/2006:15:04:05"
-	tenMinutesAgo := time.Now().Add(time.Minute * -10)
-	cmd := fmt.Sprintf(`tail -c 100000000 /app/nginx/logs/atg-access.log | sed -n "/%s/,$ p"`, tenMinutesAgo.Format(timeLayout))
+	const timeLayout = "02/Jan/2006:15:04:"
+	tenMinutesAgo := time.Now().Add(time.Minute * -11)
+	cmd := fmt.Sprintf(`tail -n $(tac /app/nginx/logs/atg-access.log | grep -Fnm 1 '%s' | awk -F ":" '{printf $1;}') atg-access.log`, tenMinutesAgo.Format(timeLayout))
 
 	log.Printf("command %s sent to %s", cmd, srv.Name)
 	cuttedLog, err := sshDo(client, cmd)
